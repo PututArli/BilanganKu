@@ -131,30 +131,38 @@ fun BilanganRowItem(sistem: SistemBilangan, input: String) {
 
     Card(
         modifier = Modifier.width(160.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = sistem.warnaBg),
         onClick = {
             Toast.makeText(context, "Sistem ${sistem.nama} dipilih", Toast.LENGTH_SHORT).show()
         }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Image(
-                painter = painterResource(id = sistem.imageRes),
-                contentDescription = sistem.nama,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.7f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(id = sistem.imageRes),
+                        contentDescription = sistem.nama,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = sistem.nama,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             )
             Text(
                 text = hasil,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.DarkGray,
                 fontWeight = FontWeight.Black
             )
         }
@@ -172,8 +180,8 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = sistem.warnaBg)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -182,7 +190,7 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
             Surface(
                 modifier = Modifier.size(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White
+                color = Color.White.copy(alpha = 0.7f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Image(
@@ -199,12 +207,13 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
                 Text(
                     text = sistem.nama,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
                 Text(
                     text = hasil,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.DarkGray,
                     fontWeight = FontWeight.Black
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -213,9 +222,10 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
                         Toast.makeText(context, "Hasil $hasil disalin", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.height(36.dp),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                 ) {
-                    Text("Salin Hasil", fontSize = 12.sp)
+                    Text("Salin Hasil", fontSize = 12.sp, color = Color.White)
                 }
             }
         }
