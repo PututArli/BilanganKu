@@ -18,14 +18,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.bilanganku.model.SistemBilangan
 import com.example.bilanganku.model.SistemBilanganSource
 import com.example.bilanganku.ui.theme.BilanganKuTheme
@@ -36,7 +33,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BilanganKuTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     DaftarBilanganScreen()
                 }
             }
@@ -59,7 +59,6 @@ fun DaftarBilanganScreen() {
             Text(
                 text = "BilanganKu",
                 style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary
             )
 
@@ -68,7 +67,7 @@ fun DaftarBilanganScreen() {
             OutlinedTextField(
                 value = inputDesimal,
                 onValueChange = { if (it.all { char -> char.isDigit() }) inputDesimal = it },
-                label = { Text("Masukkan Desimal") },
+                label = { Text("Masukkan Desimal", style = MaterialTheme.typography.bodyMedium) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -87,7 +86,7 @@ fun DaftarBilanganScreen() {
             Text(
                 text = "Sistem Utama",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -104,7 +103,7 @@ fun DaftarBilanganScreen() {
             Text(
                 text = "Daftar Lengkap",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
@@ -142,7 +141,7 @@ fun BilanganRowItem(sistem: SistemBilangan, input: String) {
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Image(
@@ -156,14 +155,12 @@ fun BilanganRowItem(sistem: SistemBilangan, input: String) {
             Text(
                 text = sistem.nama,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = hasil,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.DarkGray,
-                fontWeight = FontWeight.Black
+                color = MaterialTheme.colorScheme.secondary
             )
         }
     }
@@ -190,7 +187,7 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
             Surface(
                 modifier = Modifier.size(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Image(
@@ -207,14 +204,12 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
                 Text(
                     text = sistem.nama,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = hasil,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.Black
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
@@ -223,9 +218,12 @@ fun DetailBilanganItem(sistem: SistemBilangan, input: String) {
                     },
                     modifier = Modifier.height(36.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    Text("Salin Hasil", fontSize = 12.sp, color = Color.White)
+                    Text("Salin Hasil", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
