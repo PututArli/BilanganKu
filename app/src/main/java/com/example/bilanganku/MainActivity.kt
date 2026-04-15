@@ -38,6 +38,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.bilanganku.model.SistemBilangan
 import com.example.bilanganku.model.SistemBilanganSource
 import com.example.bilanganku.ui.theme.BilanganKuTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -248,8 +250,11 @@ fun DetailBilanganScreen(
     currentBase: Int,
     onSaveHistory: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val hasil = remember(input, currentBase) { convertUniversal(input, currentBase, sistem.basis) }
+
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -265,7 +270,8 @@ fun DetailBilanganScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp, vertical = 8.dp)) {
             Box(
@@ -287,15 +293,31 @@ fun DetailBilanganScreen(
             Button(
                 onClick = {
                     if (input.isNotEmpty()) {
-                        onSaveHistory(hasil)
-                        Toast.makeText(context, "Hasil disalin & disimpan", Toast.LENGTH_SHORT).show()
+                        coroutineScope.launch {
+                            isLoading = true
+                            delay(2000)
+                            onSaveHistory(hasil)
+                            isLoading = false
+                            snackbarHostState.showSnackbar("Riwayat konversi berhasil disimpan!")
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                enabled = !isLoading
             ) {
-                Text("Salin & Simpan Riwayat", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Memproses...", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Salin & Simpan Riwayat", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
