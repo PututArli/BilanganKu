@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,10 +22,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.bilanganku.model.SistemBilangan
 import com.example.bilanganku.model.SistemBilanganSource
 import com.example.bilanganku.ui.theme.BilanganKuTheme
@@ -104,6 +106,22 @@ fun DaftarBilanganScreen(
     inputBase: Int,
     onInputBaseChange: (Int) -> Unit
 ) {
+    var dataList by remember { mutableStateOf<List<SistemBilangan>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        try {
+            delay(1500)
+            dataList = SistemBilanganSource.dummyData
+            isLoading = false
+            isError = false
+        } catch (e: Exception) {
+            isLoading = false
+            isError = true
+        }
+    }
+
     val validChars = remember(inputBase) {
         when (inputBase) {
             2 -> listOf('0', '1')
@@ -124,83 +142,108 @@ fun DaftarBilanganScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).statusBarsPadding(),
-            contentPadding = PaddingValues(bottom = 24.dp)
-        ) {
-            item {
-                Column(modifier = Modifier.padding(24.dp)) {
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (isError || dataList.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "BilanganKu",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        text = "Pilih Basis Input",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(SistemBilanganSource.dummyData) { sistem ->
-                            val isSelected = inputBase == sistem.basis
-                            Surface(
-                                onClick = {
-                                    onInputBaseChange(sistem.basis)
-                                    onInputValueChange("")
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            ) {
-                                Text(
-                                    text = sistem.nama,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    OutlinedTextField(
-                        value = inputValue,
-                        onValueChange = { newValue ->
-                            if (newValue.all { it in validChars }) {
-                                onInputValueChange(newValue.uppercase())
-                            }
-                        },
-                        label = { Text("Input Angka") },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = if (inputBase == 16) KeyboardType.Text else KeyboardType.Number
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        trailingIcon = {
-                            if (inputValue.isNotEmpty()) {
-                                IconButton(onClick = { onInputValueChange("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = null)
-                                }
-                            }
-                        },
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Text(
-                        text = "Hasil Konversi",
+                        text = "Gagal Memuat Data",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.Red
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Pastikan koneksi internet Anda menyala",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
-            items(SistemBilanganSource.dummyData) { data ->
-                if (data.basis != inputBase) {
-                    BilanganListItem(data, inputValue, inputBase, navController)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(paddingValues).statusBarsPadding(),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                item {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "BilanganKu",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Pilih Basis Input",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(dataList) { sistem ->
+                                val isSelected = inputBase == sistem.basis
+                                Surface(
+                                    onClick = {
+                                        onInputBaseChange(sistem.basis)
+                                        onInputValueChange("")
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                ) {
+                                    Text(
+                                        text = sistem.nama,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        OutlinedTextField(
+                            value = inputValue,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it in validChars }) {
+                                    onInputValueChange(newValue.uppercase())
+                                }
+                            },
+                            label = { Text("Input Angka") },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = if (inputBase == 16) KeyboardType.Text else KeyboardType.Number
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            trailingIcon = {
+                                if (inputValue.isNotEmpty()) {
+                                    IconButton(onClick = { onInputValueChange("") }) {
+                                        Icon(Icons.Default.Clear, contentDescription = null)
+                                    }
+                                }
+                            },
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Text(
+                            text = "Hasil Konversi",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                items(dataList) { data ->
+                    if (data.basis != inputBase) {
+                        BilanganListItem(data, inputValue, inputBase, navController)
+                    }
                 }
             }
         }
@@ -230,7 +273,14 @@ fun BilanganListItem(sistem: SistemBilangan, input: String, currentBase: Int, na
                 modifier = Modifier.size(52.dp).background(Color.White, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(painter = painterResource(id = sistem.imageRes), contentDescription = null, modifier = Modifier.size(30.dp))
+                AsyncImage(
+                    model = sistem.imageUrl,
+                    contentDescription = sistem.nama,
+                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
+                    error = painterResource(id = android.R.drawable.ic_delete),
+                    modifier = Modifier.size(30.dp),
+                    contentScale = ContentScale.Crop
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -251,7 +301,6 @@ fun DetailBilanganScreen(
     onSaveHistory: (String) -> Unit
 ) {
     val hasil = remember(input, currentBase) { convertUniversal(input, currentBase, sistem.basis) }
-
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -278,7 +327,14 @@ fun DetailBilanganScreen(
                 modifier = Modifier.fillMaxWidth().height(200.dp).background(sistem.warnaBg, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(painter = painterResource(id = sistem.imageRes), contentDescription = null, modifier = Modifier.size(100.dp))
+                AsyncImage(
+                    model = sistem.imageUrl,
+                    contentDescription = sistem.nama,
+                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
+                    error = painterResource(id = android.R.drawable.ic_delete),
+                    modifier = Modifier.size(100.dp),
+                    contentScale = ContentScale.Crop
+                )
             }
             Spacer(modifier = Modifier.height(24.dp))
             Text(text = sistem.nama, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
