@@ -37,8 +37,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.bilanganku.model.SistemBilangan
-import com.example.bilanganku.model.SistemBilanganSource
+import com.example.bilanganku.data.model.SistemBilangan
+import com.example.bilanganku.data.repository.BilanganRepository
 import com.example.bilanganku.ui.theme.BilanganKuTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,6 +63,7 @@ fun AppNavigation(navController: NavHostController) {
     var inputValue by remember { mutableStateOf("") }
     var inputBase by remember { mutableIntStateOf(10) }
     var riwayatList by remember { mutableStateOf(listOf<String>()) }
+    var dataList by remember { mutableStateOf<List<SistemBilangan>>(emptyList()) }
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
@@ -71,12 +72,14 @@ fun AppNavigation(navController: NavHostController) {
                 inputValue = inputValue,
                 onInputValueChange = { inputValue = it },
                 inputBase = inputBase,
-                onInputBaseChange = { inputBase = it }
+                onInputBaseChange = { inputBase = it },
+                dataList = dataList,
+                onDataLoaded = { dataList = it }
             )
         }
         composable("detail/{nama}") { backStackEntry ->
             val nama = backStackEntry.arguments?.getString("nama")
-            val sistem = SistemBilanganSource.dummyData.find { it.nama == nama }
+            val sistem = dataList.find { it.nama == nama }
             if (sistem != null) {
                 DetailBilanganScreen(
                     sistem = sistem,
@@ -104,21 +107,27 @@ fun DaftarBilanganScreen(
     inputValue: String,
     onInputValueChange: (String) -> Unit,
     inputBase: Int,
-    onInputBaseChange: (Int) -> Unit
+    onInputBaseChange: (Int) -> Unit,
+    dataList: List<SistemBilangan>,
+    onDataLoaded: (List<SistemBilangan>) -> Unit
 ) {
-    var dataList by remember { mutableStateOf<List<SistemBilangan>>(emptyList()) }
+    val repository = remember { BilanganRepository() }
     var isLoading by remember { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        try {
-            delay(1500)
-            dataList = SistemBilanganSource.dummyData
+        if (dataList.isEmpty()) {
+            val result = repository.getSistemBilangan()
+            if (result.isNotEmpty()) {
+                onDataLoaded(result)
+                isLoading = false
+                isError = false
+            } else {
+                isLoading = false
+                isError = true
+            }
+        } else {
             isLoading = false
-            isError = false
-        } catch (e: Exception) {
-            isLoading = false
-            isError = true
         }
     }
 
@@ -146,7 +155,7 @@ fun DaftarBilanganScreen(
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (isError || dataList.isEmpty()) {
+        } else if (isError) {
             Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
@@ -263,10 +272,11 @@ fun convertUniversal(input: String, currentBase: Int, targetBase: Int): String {
 @Composable
 fun BilanganListItem(sistem: SistemBilangan, input: String, currentBase: Int, navController: NavController) {
     val hasil = remember(input, currentBase) { convertUniversal(input, currentBase, sistem.basis) }
+    val cardColor = remember(sistem.warnaHex) { Color(android.graphics.Color.parseColor(sistem.warnaHex)) }
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).clickable { navController.navigate("detail/${sistem.nama}") },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = sistem.warnaBg.copy(0.3f))
+        colors = CardDefaults.cardColors(containerColor = cardColor.copy(0.3f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -301,6 +311,7 @@ fun DetailBilanganScreen(
     onSaveHistory: (String) -> Unit
 ) {
     val hasil = remember(input, currentBase) { convertUniversal(input, currentBase, sistem.basis) }
+    val cardColor = remember(sistem.warnaHex) { Color(android.graphics.Color.parseColor(sistem.warnaHex)) }
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -324,7 +335,7 @@ fun DetailBilanganScreen(
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp, vertical = 8.dp)) {
             Box(
-                modifier = Modifier.fillMaxWidth().height(200.dp).background(sistem.warnaBg, RoundedCornerShape(16.dp)),
+                modifier = Modifier.fillMaxWidth().height(200.dp).background(cardColor, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -432,14 +443,5 @@ fun RiwayatScreen(navController: NavController, riwayatList: List<String>) {
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DaftarBilanganPreview() {
-    BilanganKuTheme {
-        val navController = rememberNavController()
-        AppNavigation(navController)
     }
 }
