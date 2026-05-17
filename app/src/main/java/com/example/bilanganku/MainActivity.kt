@@ -1,7 +1,6 @@
 package com.example.bilanganku
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,24 +10,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -49,7 +46,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BilanganKuTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color(0xFFF8FAFC)
+                ) {
                     val navController = rememberNavController()
                     AppNavigation(navController)
                 }
@@ -101,6 +101,7 @@ fun AppNavigation(navController: NavHostController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DaftarBilanganScreen(
     navController: NavController,
@@ -142,81 +143,89 @@ fun DaftarBilanganScreen(
     }
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("riwayat") },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.List, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
+        topBar = {
+            TopAppBar(
+                title = { Text("BilanganKu", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp) },
+                actions = {
+                    IconButton(
+                        onClick = { navController.navigate("riwayat") },
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    ) {
+                        Icon(Icons.Default.History, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF8FAFC),
+                    titleContentColor = Color(0xFF0F172A)
+                )
+            )
+        },
+        containerColor = Color(0xFFF8FAFC)
     ) { paddingValues ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (isError) {
             Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Gagal Memuat Data",
+                        text = "Koneksi Terputus",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Red
+                        color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Pastikan koneksi internet Anda menyala",
+                        text = "Silakan periksa jaringan internet Anda.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).statusBarsPadding(),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentPadding = PaddingValues(bottom = 32.dp)
             ) {
                 item {
-                    Column(modifier = Modifier.padding(24.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
                         Text(
-                            text = "BilanganKu",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text(
-                            text = "Pilih Basis Input",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = "Basis Input",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF475569)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(dataList) { sistem ->
                                 val isSelected = inputBase == sistem.basis
+                                val cardBg = if (isSelected) Color(0xFF4F46E5) else Color.White
+                                val textColor = if (isSelected) Color.White else Color(0xFF334155)
+
                                 Surface(
                                     onClick = {
                                         onInputBaseChange(sistem.basis)
                                         onInputValueChange("")
                                     },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = cardBg,
+                                    shadowElevation = if (isSelected) 8.dp else 2.dp
                                 ) {
                                     Text(
                                         text = sistem.nama,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
+                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = textColor
                                     )
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
                         OutlinedTextField(
                             value = inputValue,
                             onValueChange = { newValue ->
@@ -224,29 +233,36 @@ fun DaftarBilanganScreen(
                                     onInputValueChange(newValue.uppercase())
                                 }
                             },
-                            label = { Text("Input Angka") },
+                            placeholder = { Text("Ketik angka di sini...", color = Color(0xFF94A3B8)) },
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = if (inputBase == 16) KeyboardType.Text else KeyboardType.Number
                             ),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedBorderColor = Color(0xFF4F46E5),
+                                unfocusedBorderColor = Color(0xFFE2E8F0)
+                            ),
                             trailingIcon = {
                                 if (inputValue.isNotEmpty()) {
                                     IconButton(onClick = { onInputValueChange("") }) {
-                                        Icon(Icons.Default.Clear, contentDescription = null)
+                                        Icon(Icons.Default.Clear, contentDescription = null, tint = Color(0xFF94A3B8))
                                     }
                                 }
                             },
-                            singleLine = true
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                         Text(
                             text = "Hasil Konversi",
-                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = Color(0xFF0F172A)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
                 items(dataList) { data ->
@@ -272,30 +288,39 @@ fun convertUniversal(input: String, currentBase: Int, targetBase: Int): String {
 @Composable
 fun BilanganListItem(sistem: SistemBilangan, input: String, currentBase: Int, navController: NavController) {
     val hasil = remember(input, currentBase) { convertUniversal(input, currentBase, sistem.basis) }
-    val cardColor = remember(sistem.warnaHex) { Color(android.graphics.Color.parseColor(sistem.warnaHex)) }
+    val tintColor = remember(sistem.warnaHex) { Color(android.graphics.Color.parseColor(sistem.warnaHex)) }
+
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).clickable { navController.navigate("detail/${sistem.nama}") },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor.copy(0.3f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .clickable { navController.navigate("detail/${sistem.nama}") },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
-                modifier = Modifier.size(52.dp).background(Color.White, RoundedCornerShape(12.dp)),
+                modifier = Modifier
+                    .size(60.dp)
+                    .background(tintColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
                     model = sistem.imageUrl,
                     contentDescription = sistem.nama,
-                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    error = painterResource(id = android.R.drawable.ic_delete),
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier.size(36.dp),
                     contentScale = ContentScale.Crop
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(20.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = sistem.nama, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.Black)
-                Text(text = hasil, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+                Text(text = sistem.nama, fontSize = 14.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = hasil, fontSize = 22.sp, color = Color(0xFF0F172A), fontWeight = FontWeight.ExtraBold)
             }
         }
     }
@@ -319,83 +344,78 @@ fun DetailBilanganScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detail Konversi", fontWeight = FontWeight.Bold) },
+                title = { Text(sistem.nama, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFFF8FAFC),
+                    titleContentColor = Color(0xFF0F172A)
                 )
             )
         },
+        containerColor = Color(0xFFF8FAFC),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp)
+        ) {
             Box(
-                modifier = Modifier.fillMaxWidth().height(200.dp).background(cardColor, RoundedCornerShape(16.dp)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+                    .background(cardColor.copy(alpha = 0.15f), RoundedCornerShape(32.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
                     model = sistem.imageUrl,
                     contentDescription = sistem.nama,
-                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    error = painterResource(id = android.R.drawable.ic_delete),
-                    modifier = Modifier.size(100.dp),
+                    modifier = Modifier.size(120.dp),
                     contentScale = ContentScale.Crop
                 )
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(text = sistem.nama, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(text = "Hasil Konversi", fontSize = 16.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = sistem.deskripsi, style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Basis Target: ${sistem.basis}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Hasil Konversi dari Basis $currentBase:", style = MaterialTheme.typography.titleMedium)
-            Text(text = hasil, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+            Text(text = hasil, fontSize = 48.sp, color = Color(0xFF0F172A), fontWeight = FontWeight.Black)
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(text = "Dari Basis $currentBase ke ${sistem.basis}", fontSize = 16.sp, color = Color(0xFF475569), fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = sistem.deskripsi, fontSize = 15.sp, color = Color(0xFF64748B), lineHeight = 24.sp)
+
             Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = {
                     if (input.isNotEmpty()) {
                         coroutineScope.launch {
                             isLoading = true
-                            delay(2000)
+                            delay(1500)
                             onSaveHistory(hasil)
                             isLoading = false
-                            snackbarHostState.showSnackbar("Riwayat konversi berhasil disimpan!")
+                            snackbarHostState.showSnackbar("Disimpan ke riwayat!")
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
                 enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 3.dp
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Memproses...", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Salin & Simpan Riwayat", fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Simpan Riwayat", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Text("Kembali", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -413,30 +433,36 @@ fun RiwayatScreen(navController: NavController, riwayatList: List<String>) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFFF8FAFC),
+                    titleContentColor = Color(0xFF0F172A)
                 )
             )
-        }
+        },
+        containerColor = Color(0xFFF8FAFC)
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             if (riwayatList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Belum ada riwayat.", style = MaterialTheme.typography.bodyLarge)
+                    Text("Belum ada data konversi.", fontSize = 16.sp, color = Color(0xFF94A3B8))
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    contentPadding = PaddingValues(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     items(riwayatList) { riwayat ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Text(
                                 text = riwayat,
-                                modifier = Modifier.padding(16.dp),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                modifier = Modifier.padding(24.dp),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF334155)
                             )
                         }
                     }
