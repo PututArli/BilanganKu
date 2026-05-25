@@ -1,6 +1,7 @@
 package com.example.bilanganku
 
 import android.os.Bundle
+import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,13 +16,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,7 +52,7 @@ class MainActivity : ComponentActivity() {
             BilanganKuTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF8FAFC)
+                    color = Color(0xFFF1F5F9)
                 ) {
                     val navController = rememberNavController()
                     AppNavigation(navController)
@@ -65,8 +69,14 @@ fun AppNavigation(navController: NavHostController) {
     var riwayatList by remember { mutableStateOf(listOf<String>()) }
     var dataList by remember { mutableStateOf<List<SistemBilangan>>(emptyList()) }
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
+    NavHost(navController = navController, startDestination = "dashboard") {
+        composable("dashboard") {
+            DashboardScreen(navController)
+        }
+        composable("penerjemah") {
+            PenerjemahTeksScreen(navController)
+        }
+        composable("konversi") {
             DaftarBilanganScreen(
                 navController = navController,
                 inputValue = inputValue,
@@ -97,6 +107,199 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable("riwayat") {
             RiwayatScreen(navController, riwayatList)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("BilanganKu", fontWeight = FontWeight.ExtraBold, fontSize = 28.sp) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF1F5F9),
+                    titleContentColor = Color(0xFF0F172A)
+                )
+            )
+        },
+        containerColor = Color(0xFFF1F5F9)
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            item {
+                Text(
+                    text = "Pilih Alat Cerdas",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF475569),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Konversi Basis Bilangan",
+                    subtitle = "Desimal, Biner, Oktal, Hexadesimal",
+                    icon = Icons.Default.Calculate,
+                    color = Color(0xFF4F46E5),
+                    onClick = { navController.navigate("konversi") }
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Sandi Teks",
+                    subtitle = "Terjemahkan teks ke ASCII & Base64",
+                    icon = Icons.Default.Translate,
+                    color = Color(0xFF10B981),
+                    onClick = { navController.navigate("penerjemah") }
+                )
+            }
+            item {
+                MenuCard(
+                    title = "Riwayat Aktivitas",
+                    subtitle = "Lihat hasil konversi yang disimpan",
+                    icon = Icons.Default.History,
+                    color = Color(0xFFF59E0B),
+                    onClick = { navController.navigate("riwayat") }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MenuCard(title: String, subtitle: String, icon: ImageVector, color: Color, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(color.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    color = Color(0xFF64748B)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PenerjemahTeksScreen(navController: NavController) {
+    var textInput by remember { mutableStateOf("") }
+
+    // Konversi
+    val byteData = textInput.toByteArray()
+
+    val decResult = if (textInput.isNotEmpty()) byteData.joinToString(" ") { it.toInt().toString() } else "..."
+    val binaryResult = if (textInput.isNotEmpty()) byteData.joinToString(" ") { Integer.toBinaryString(it.toInt()).padStart(8, '0') } else "..."
+    val octalResult = if (textInput.isNotEmpty()) byteData.joinToString(" ") { Integer.toOctalString(it.toInt()) } else "..."
+    val hexResult = if (textInput.isNotEmpty()) byteData.joinToString(" ") { String.format("%02X", it) } else "..."
+    val base64Result = if (textInput.isNotEmpty()) Base64.encodeToString(byteData, Base64.NO_WRAP) else "..."
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Sandi Teks", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFF1F5F9),
+                    titleContentColor = Color(0xFF0F172A)
+                )
+            )
+        },
+        containerColor = Color(0xFFF1F5F9)
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                OutlinedTextField(
+                    value = textInput,
+                    onValueChange = { textInput = it },
+                    label = { Text("Ketik Teks / Password") },
+                    placeholder = { Text("Contoh: Admin123") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF10B981),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    ),
+                    trailingIcon = {
+                        if (textInput.isNotEmpty()) {
+                            IconButton(onClick = { textInput = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = null)
+                            }
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item { ResultCard("Biner (ASCII)", binaryResult, Color(0xFF10B981)) }
+            item { ResultCard("Hexadesimal", hexResult, Color(0xFF4F46E5)) }
+            item { ResultCard("Desimal (ASCII)", decResult, Color(0xFFEC4899)) }
+            item { ResultCard("Oktal", octalResult, Color(0xFFF59E0B)) }
+            item { ResultCard("Base64 Encoding", base64Result, Color(0xFF06B6D4)) }
+        }
+    }
+}
+
+@Composable
+fun ResultCard(title: String, content: String, color: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(title, fontSize = 14.sp, color = color, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(content, fontSize = 16.sp, color = Color(0xFF1E293B), fontWeight = FontWeight.Medium, lineHeight = 26.sp)
         }
     }
 }
@@ -145,28 +348,23 @@ fun DaftarBilanganScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("BilanganKu", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp) },
-                actions = {
-                    IconButton(
-                        onClick = { navController.navigate("riwayat") },
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                    ) {
-                        Icon(Icons.Default.History, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                title = { Text("Konversi Basis", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF8FAFC),
+                    containerColor = Color(0xFFF1F5F9),
                     titleContentColor = Color(0xFF0F172A)
                 )
             )
         },
-        containerColor = Color(0xFFF8FAFC)
+        containerColor = Color(0xFFF1F5F9)
     ) { paddingValues ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(color = Color(0xFF4F46E5))
             }
         } else if (isError) {
             Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -194,7 +392,7 @@ fun DaftarBilanganScreen(
                 item {
                     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
                         Text(
-                            text = "Basis Input",
+                            text = "Pilih Basis Input",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF475569)
@@ -351,12 +549,12 @@ fun DetailBilanganScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF8FAFC),
+                    containerColor = Color(0xFFF1F5F9),
                     titleContentColor = Color(0xFF0F172A)
                 )
             )
         },
-        containerColor = Color(0xFFF8FAFC),
+        containerColor = Color(0xFFF1F5F9),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Column(
@@ -377,18 +575,14 @@ fun DetailBilanganScreen(
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
-
             Text(text = "Hasil Konversi", fontSize = 16.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = hasil, fontSize = 48.sp, color = Color(0xFF0F172A), fontWeight = FontWeight.Black)
-
             Spacer(modifier = Modifier.height(24.dp))
             Text(text = "Dari Basis $currentBase ke ${sistem.basis}", fontSize = 16.sp, color = Color(0xFF475569), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = sistem.deskripsi, fontSize = 15.sp, color = Color(0xFF64748B), lineHeight = 24.sp)
-
             Spacer(modifier = Modifier.weight(1f))
-
             Button(
                 onClick = {
                     if (input.isNotEmpty()) {
@@ -433,12 +627,12 @@ fun RiwayatScreen(navController: NavController, riwayatList: List<String>) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF8FAFC),
+                    containerColor = Color(0xFFF1F5F9),
                     titleContentColor = Color(0xFF0F172A)
                 )
             )
         },
-        containerColor = Color(0xFFF8FAFC)
+        containerColor = Color(0xFFF1F5F9)
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             if (riwayatList.isEmpty()) {
