@@ -135,7 +135,7 @@ fun DashboardScreen(navController: NavController) {
         ) {
             item {
                 Text(
-                    text = "Pilih Alat Cerdas",
+                    text = "Pilih Menu",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF475569),
