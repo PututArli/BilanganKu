@@ -1,15 +1,27 @@
+# Android Studio / IntelliJ IDEA
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
 local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+cmake-build-*/
+*.hprof
+
+# Android / Gradle Build
+build/
+*/build/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Private Files
+# Keep these out of version control for security
+# google-services.json
+# *.jks
+# *.keystore
+
+# Artifacts directory (if specific to this environment)
+.artifacts/
